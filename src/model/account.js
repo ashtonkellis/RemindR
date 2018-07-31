@@ -66,7 +66,7 @@ accountSchema.methods.createTokenPromise = function createTokenPromise() {
 const skipInit = process.env.NODE_ENV === 'development';
 const Account = mongoose.model('accounts', accountSchema, 'accounts', skipInit);
 
-Account.create = (username, email, password, phone) => {
+Account.create = (username, email, password, phone = '5555555555') => {
   return bcrypt.hash(password, HASH_ROUNDS)
     .then((passwordHash) => {
       password = null; /*eslint-disable-line*/

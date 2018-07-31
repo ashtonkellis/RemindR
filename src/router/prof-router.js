@@ -86,4 +86,15 @@ profileRouter.delete('/api/profiles/:id?', bearerAuthMiddleware, (request, respo
   return undefined;
 });
 
+profileRouter.get('/api/profiles/me', bearerAuthMiddleware, (request, response, next) => {
+  if (!request.account) return next(new HttpErrors(400, 'GET PROFILE ROUTER-AUTH: invalid request'));
+
+  return Profile.findOne({ accountId: request.account._id })
+    .then((profile) => {
+      if (!profile) return next(new HttpErrors(404, 'not found'));
+      return response.json(profile);
+    })
+    .catch(next);
+});
+
 export default profileRouter;
