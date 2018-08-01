@@ -17,6 +17,9 @@ const profileSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  bio: {
+    type: String,
+  },
   imageId: {
     type: mongoose.Schema.Types.ObjectId,
     unique: true,
