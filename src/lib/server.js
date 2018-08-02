@@ -41,8 +41,8 @@ app.use(express.json());
 
 // our own api routers or middleware
 app.use(loggerMiddleware);
-app.use(googleOAuthRouter);
 app.use(authRouter);
+app.use(googleOAuthRouter);
 app.use(messageRouter);
 app.use(reminderRouter);
 app.use(imageRouter);
