@@ -29,7 +29,6 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
     return next(new HttpErrors(500, 'Google OAuth Error'));
   }
   // logger.log(logger.INFO, `RECVD CODE FROM GOOGLE AND SENDING IT BACK TO GOOGLE: ${request.query.code}`);
-
   // Once we have the Google code, we send it back to Google' server that deals with making tokens
   let accessToken;
   return superagent.post(GOOGLE_OAUTH_URL)
@@ -50,7 +49,6 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
       accessToken = googleTokenResponse.body.access_token;
 
       logger.log(logger.INFO, `ACCESS TOKEN RECEIVED: ${JSON.stringify(accessToken)}`);
-
       return superagent.get(OPEN_ID_URL)
         .set('Authorization', `Bearer ${accessToken}`);
     })
@@ -70,26 +68,43 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
       const { email } = openIDResponse.body;
       const username = email; // this won't be used in lecture code, this is to help you figure out how to save Google information as an account in our Mongo database
       const cookieOptions = { maxAge: 7 * 1000 * 60 * 60 * 24 };
-
       Account.init()
         .then(() => {
           Account.find({ email })
             .then((accounts) => {
-              const account = accounts[0];
-              
-              if (!account) {
+              // if the account does not already exist
+              if (accounts.length === 0) {
                 const password = uuid();
                 Account.create(username, email, password)
-                  .then((account) => {
-                    console.log(account, 'ACCOUNT');
+                  .then((newSavedAccount) => {
+                    console.log(newSavedAccount, 'NEW SAVED ACCOUNT');
+                    newSavedAccount.tokenSeed = accessToken;
+                    newSavedAccount.save()
+                      .then((savedAccountWithGoogleToken) => {
+                        console.log(accessToken, 'ACCESS TOKEN FROM GOOGLE');
+                        console.log(savedAccountWithGoogleToken, 'SAVED ACCOUNT WITH GOOGLE TOKEN');
+                        // * When new account is returned, set the account's tokenSeed property to the "accessToken" variable we got from Google and save the new account to update it in the db
+                        // * You get the updated account and then grab the updated account's tokenSeed property and pass it into "jwt.sign"
+                        // * If this works, you get a newly encrypted token that will be written as a cookie on the browser, and you will redirect back to the client homepage
+                        
+                        const jsonWebToken = jwt.sign({ tokenSeed: savedAccountWithGoogleToken.tokenSeed }, process.env.SECRET_KEY);
+                        response.cookie('_token', jsonWebToken, cookieOptions);
+                        return response.redirect(process.env.CLIENT_URL).withCredentials();
+                      });
+                  });
+                // if the account already does exist
+              } else {
+                const accountFromDB = accounts[0];
+                console.log(accountFromDB, 'ACCOUNT FROM DB');
+                return jwt.sign({ tokenSeed: accountFromDB.tokenSeed }, process.env.SECRET_KEY)
+                  .then((jsonWebToken) => {
+                    response.cookie('_token', jsonWebToken, cookieOptions);
+                    return response.redirect(process.env.CLIENT_URL).withCredentials();
                   });
               }
             });
         });
-
-      // This will not work on outside of localhost
-      response.cookie('_token', accessToken, cookieOptions);
-      response.redirect(process.env.CLIENT_URL);
+      return undefined;
     })
     .catch(next);
 
@@ -104,7 +119,7 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
               * create account, advise using Account.create(...args)
               * advise using crypto/uuid to generate an arbitrary password
               * When new account is returned, set the account's tokenSeed property to the "accessToken" variable we got from Google and save the new account to update it in the db
-              * You get the updated account and then grap the updated account's tokenSeed property and pass it into "jwt.sign"
+              * You get the updated account and then grab the updated account's tokenSeed property and pass it into "jwt.sign"
               * If this works, you get a newly encrypted token that will be written as a cookie on the browser, and you will redirect back to the client homepage
           * else if the account DOES exist in db already
               * You get the account grap the  account's tokenSeed property and pass it into "jwt.sign"
