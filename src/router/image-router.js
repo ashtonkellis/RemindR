@@ -11,16 +11,17 @@ const multerUpload = multer({ dest: `${__dirname}/../temp` });
 const imageRouter = new Router();
 
 imageRouter.post('/api/images', bearerAuthMiddleware, multerUpload.any(), (request, response, next) => {
+  console.log('LINE 14');
   if (!request.account) return next(new HttpErrors(401, 'IMAGE ROUTER WILL NOT POST: not accessible'));
   const [file] = request.files;
-
+  console.log('LINE 16');
   logger.log(logger.INFO, `IMAGE ROUTER POST: valid image ready to upload: ${JSON.stringify(file, null, 2)}`);
   const key = `${file.filename}.${file.originalname}`;
 
   return uploadS3Asset(file.path, key)
     .then((url) => {
       logger.log(logger.INFO, `IMAGE ROUTER POST: valid image URL from Amazon S3: ${url}`);
-
+      console.log('LINE 23');
       return new Image({
         title: request.body.title,
         accountId: request.account._id,
@@ -30,6 +31,8 @@ imageRouter.post('/api/images', bearerAuthMiddleware, multerUpload.any(), (reque
     })
     .then((newImage) => {
       logger.log(logger.INFO, `IMAGE ROUTER POST: new image created: ${JSON.stringify(newImage, null, 2)}`);
+      console.log('LINE 33');
+      console.log(newImage, 'NEW IMAGE');
       return response.json(newImage);
     })
     .catch(next);
