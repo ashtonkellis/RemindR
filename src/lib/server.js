@@ -24,9 +24,13 @@ let server = null;
 // third party apps
 const corsOptions = {
   origin: (origin, cb) => {
+    console.log(process.env.CORS_ORIGINS, 'PROCESS ENV CORS ORIGINS');
+    console.log(origin, 'CORS ORIGIN');
+    console.log(process.env.CORS_ORIGINS.includes(origin), 'EQUALITY CHECK');
+    
     if (!origin) {
       cb(null, true);
-    } else if (origin.includes(process.env.CORS_ORIGINS)) {
+    } else if (process.env.CORS_ORIGINS.includes(origin)) {
       cb(null, true);
     } else {
       throw new Error(`${origin} not allowed by CORS`);
