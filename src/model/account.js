@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jsonWebToken from 'jsonwebtoken';
 import HttpErrors from 'http-errors';
+import { runInNewContext } from 'vm';
 
 const HASH_ROUNDS = 8;
 const TOKEN_SEED_LENGTH = 128;
@@ -80,6 +81,11 @@ Account.create = (username, email, password, phone = '5555555555') => {
       }).save();
     })
     .catch((err) => {
+      console.log(err);
+      if (err.message.includes('duplicate key')) {
+        throw new HttpErrors(409, 'USERNAME OR EMAIL ALREADY IN USE');
+      }
+
       throw new HttpErrors(500, `ERROR WITH HASHING or ERR WITH SAVING ACCOUNT: ${JSON.stringify(err)}`);
     });
 };
