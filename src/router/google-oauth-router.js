@@ -22,6 +22,7 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
   }
   logger.log(logger.INFO, `RECVD CODE FROM GOOGLE AND SENDING IT BACK TO GOOGLE: ${request.query.code}`);
   let accessToken;
+  console.log('LINE 25');
   return superagent.post(GOOGLE_OAUTH_URL)
     .type('form')
     .send({
@@ -32,6 +33,7 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
       redirect_uri: `${process.env.API_URL}/oauth/google`,
     })
     .then((googleTokenResponse) => {
+      console.log('LINE 35');
       if (!googleTokenResponse.body.access_token) {
         logger.log(logger.ERROR, 'No Token from Google');
         return response.redirect(process.env.CLIENT_URL);
@@ -45,7 +47,7 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
     })
     .then((openIDResponse) => {
       logger.log(logger.INFO, `OPEN ID: ${JSON.stringify(openIDResponse.body, null, 2)}`);
-
+      console.log('LINE 50');
       const { email } = openIDResponse.body;
       const username = email;
       const cookieOptions = { maxAge: 7 * 1000 * 60 * 60 * 24 };
@@ -55,6 +57,7 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
           return Account.find({ email })
             .then((accounts) => {
               // if the account does not already exist
+              console.log('LINE 60');
               if (accounts.length === 0) {
                 const password = uuid();
                 return Account.create(username, email, password)
@@ -74,7 +77,7 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
               const accountFromDB = accounts[0];
               console.log(accountFromDB, 'ACCOUNT FROM DB line 76');
               const jsonWebToken = jwt.sign({ tokenSeed: accountFromDB.tokenSeed }, process.env.SECRET_KEY);
-              
+              console.log('LINE 80');
               console.log(jsonWebToken, 'JSON WEB TOKEN');
               
               response.body = jsonWebToken;
@@ -87,4 +90,4 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
     .catch(next);
 });
 
-export default googleOAuthRouter
+export default googleOAuthRouter;
