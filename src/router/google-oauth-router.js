@@ -23,6 +23,14 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
   logger.log(logger.INFO, `RECVD CODE FROM GOOGLE AND SENDING IT BACK TO GOOGLE: ${request.query.code}`);
   let accessToken;
   console.log('LINE 25');
+  console.log({
+    code: request.query.code,
+    grant_type: 'authorization_code',
+    client_id: process.env.GOOGLE_OAUTH_ID,
+    client_secret: process.env.GOOGLE_OAUTH_SECRET,
+    redirect_uri: `${process.env.API_URL}/oauth/google`,
+  });
+  
   return superagent.post(GOOGLE_OAUTH_URL)
     .type('form')
     .send({
