@@ -14,6 +14,7 @@ const OPEN_ID_URL = 'https://www.googleapis.com/plus/v1/people/me/openIdConnect'
 const googleOAuthRouter = new Router();
 
 googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
+  console.log('HITTING API/OAUTH/GOOGLE');
   if (!request.query.code) {
     logger.log(logger.ERROR, 'DID NOT GET CODE FROM GOOGLE');
     response.redirect(process.env.CLIENT_URL);
@@ -86,4 +87,4 @@ googleOAuthRouter.get('/api/oauth/google', (request, response, next) => {
     .catch(next);
 });
 
-export default googleOAuthRouter;
+export default googleOAuthRouter
